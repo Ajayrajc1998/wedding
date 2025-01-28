@@ -12,8 +12,10 @@ from database import SessionLocal, engine
 import models, schemas, crud
 
 # Initialize database tables
-models.Base.metadata.create_all(bind=engine)
-
+try:
+    models.Base.metadata.create_all(bind=engine)
+except Exception as e:
+    print(f"Error in importing tables: {e}")
 # Load environment variables
 load_dotenv()
 
