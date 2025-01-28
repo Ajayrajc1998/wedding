@@ -8,8 +8,8 @@ from passlib.context import CryptContext
 from typing import List
 import os
 
-from app.database import SessionLocal, engine
-from app import models, schemas, crud
+from database import SessionLocal, engine
+import models, schemas, crud
 
 # Initialize database tables
 models.Base.metadata.create_all(bind=engine)
