@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app import models, schemas
+import models, schemas
 from fastapi import HTTPException
 
 # Participant CRUD
