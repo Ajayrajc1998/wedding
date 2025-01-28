@@ -22,6 +22,25 @@ def get_participant_by_full_name(db: Session, first_name: str, last_name: str):
     ).first()
 
 
+def get_participant_by_id(db: Session, participant_id: int):
+    return db.query(models.Participant).filter(models.Participant.id == participant_id).first()
+
+
+def update_participant(db: Session, db_participant: models.Participant, participant: schemas.ParticipantCreate):
+    db_participant.first_name = participant.first_name
+    db_participant.last_name = participant.last_name
+    db_participant.phone_number = participant.phone_number
+    db_participant.attending = participant.attending
+    db.commit()
+    db.refresh(db_participant)
+    return db_participant
+
+
+def delete_participant(db: Session, participant_id: int):
+    db.query(models.Participant).filter(models.Participant.id == participant_id).delete()
+    db.commit()
+
+
 # Photo CRUD
 def save_photo(db: Session, photo: schemas.UploadedPhotoCreate):
     """
@@ -43,6 +62,15 @@ def get_all_uploaded_photos(db: Session):
     return db.query(models.UploadedPhoto).all()
 
 
+def get_photo_by_id(db: Session, photo_id: int):
+    return db.query(models.UploadedPhoto).filter(models.UploadedPhoto.id == photo_id).first()
+
+
+def delete_photo(db: Session, photo_id: int):
+    db.query(models.UploadedPhoto).filter(models.UploadedPhoto.id == photo_id).delete()
+    db.commit()
+
+
 # Quiz CRUD
 def create_quiz(db: Session, quiz: schemas.QuizCreate):
     db_quiz = models.Quiz(**quiz.dict())
@@ -54,6 +82,30 @@ def create_quiz(db: Session, quiz: schemas.QuizCreate):
 
 def get_all_quizzes(db: Session):
     return db.query(models.Quiz).all()
+
+
+def get_quiz_by_id(db: Session, quiz_id: int):
+    return db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
+
+
+def update_quiz(db: Session, db_quiz: models.Quiz, quiz: schemas.QuizCreate):
+    db_quiz.question = quiz.question
+    db_quiz.option_a = quiz.option_a
+    db_quiz.option_b = quiz.option_b
+    db_quiz.option_c = quiz.option_c
+    db_quiz.option_d = quiz.option_d
+    db_quiz.correct_option = quiz.correct_option
+    db.commit()
+    db.refresh(db_quiz)
+    return db_quiz
+
+
+def delete_quiz(db: Session, quiz_id: int):
+    quiz = db.query(models.Quiz).filter(models.Quiz.id == quiz_id).first()
+    if quiz:
+        db.delete(quiz)
+        db.commit()
+    return quiz
 
 
 # Quiz Participant CRU

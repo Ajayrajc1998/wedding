@@ -112,6 +112,27 @@ def register_participant(participant: schemas.ParticipantCreate, db: Session = D
     return crud.create_participant(db, participant)
 
 
+@app.put("/participant/{participant_id}", response_model=schemas.Participant)
+def update_participant(participant_id: int, participant: schemas.ParticipantCreate, db: Session = Depends(get_db), admin: str = Depends(get_current_admin)):
+    """
+    Update participant details.
+    """
+    db_participant = crud.get_participant_by_id(db, participant_id)
+    if not db_participant:
+        raise HTTPException(status_code=404, detail="Participant not found.")
+    return crud.update_participant(db, db_participant, participant)
+
+
+@app.delete("/participant/{participant_id}")
+def delete_participant(participant_id: int, db: Session = Depends(get_db), admin: str = Depends(get_current_admin)):
+    """
+    Delete a participant by ID.
+    """
+    participant = crud.get_participant_by_id(db, participant_id)
+    if not participant:
+        raise HTTPException(status_code=404, detail="Participant not found.")
+    crud.delete_participant(db, participant_id)
+    return {"message": "Participant deleted successfully"}
 
 
 @app.get("/participants", response_model=List[schemas.Participant])
@@ -161,6 +182,18 @@ def upload_photo(
     }
 
 
+@app.delete("/upload_photo/{photo_id}")
+def delete_photo(photo_id: int, db: Session = Depends(get_db), admin: str = Depends(get_current_admin)):
+    """
+    Delete an uploaded photo by ID.
+    """
+    photo = crud.get_photo_by_id(db, photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found.")
+    crud.delete_photo(db, photo_id)
+    return {"message": "Photo deleted successfully"}
+
+
 @app.get("/photos", response_model=List[schemas.UploadedPhoto])
 def get_photos(db: Session = Depends(get_db)):
     if not admin_state["allow_photos"]:
@@ -174,6 +207,28 @@ def add_quiz(quiz: schemas.QuizCreate, db: Session = Depends(get_db), admin: str
     Admin creates a quiz question.
     """
     return crud.create_quiz(db, quiz)
+
+
+@app.put("/quiz/{quiz_id}", response_model=schemas.Quiz)
+def update_quiz(quiz_id: int, quiz: schemas.QuizCreate, db: Session = Depends(get_db), admin: str = Depends(get_current_admin)):
+    """
+    Update quiz details.
+    """
+    db_quiz = crud.get_quiz_by_id(db, quiz_id)
+    if not db_quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found.")
+    return crud.update_quiz(db, db_quiz, quiz)
+
+
+@app.delete("/admin/quiz/{quiz_id}")
+def delete_quiz(quiz_id: int, db: Session = Depends(get_db), admin: str = Depends(get_current_admin)):
+    """
+    Admin deletes a quiz question by ID.
+    """
+    quiz = crud.delete_quiz(db, quiz_id)
+    if not quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found.")
+    return {"message": "Quiz deleted successfully"}
 
 
 @app.get("/quiz", response_model=List[schemas.Quiz])
@@ -192,16 +247,6 @@ def submit_quiz(submission: schemas.QuizSubmission, db: Session = Depends(get_db
     """
     return crud.calculate_and_save_marks(db, submission)
 
-
-@app.delete("/admin/quiz/{quiz_id}")
-def delete_quiz(quiz_id: int, db: Session = Depends(get_db), admin: str = Depends(get_current_admin)):
-    """
-    Admin deletes a quiz question by ID.
-    """
-    quiz = crud.delete_quiz(db, quiz_id)
-    if not quiz:
-        raise HTTPException(status_code=404, detail="Quiz not found.")
-    return {"message": "Quiz deleted successfully"}
 
 @app.get("/quiz_participants", response_model=List[schemas.QuizParticipant])
 def get_quiz_participants(
