@@ -66,6 +66,13 @@ def get_photo_by_id(db: Session, photo_id: int):
     return db.query(models.UploadedPhoto).filter(models.UploadedPhoto.id == photo_id).first()
 
 
+def get_photos_by_name(db: Session, first_name: str, last_name: str):
+    return db.query(models.UploadedPhoto).filter(
+        models.UploadedPhoto.first_name == first_name,
+        models.UploadedPhoto.last_name == last_name
+    ).all()
+
+
 def delete_photo(db: Session, photo_id: int):
     db.query(models.UploadedPhoto).filter(models.UploadedPhoto.id == photo_id).delete()
     db.commit()

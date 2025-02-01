@@ -140,13 +140,13 @@ def upload_photo(
     if not admin_state["allow_photos"]:
         raise HTTPException(status_code=403, detail="Photo uploads are disabled.")
 
-    # Validate participant exists
-    participant = crud.save_photo(db, first_name, last_name, phone_number)
-    if not participant:
-        raise HTTPException(status_code=404, detail="Participant not found.")
+    # Check for duplicate photo entry
+    existing_photos = crud.get_photos_by_name(db, first_name, last_name)
+    if any(photo.filename == file.filename for photo in existing_photos):
+        raise HTTPException(status_code=400, detail="Duplicate photo entry.")
 
     # Ensure upload limit per participant is not exceeded
-    if len(participant) >= 5:
+    if len(existing_photos) >= 5:
         raise HTTPException(
             status_code=400, detail=f"Photo upload limit reached for {first_name} {last_name}."
         )
@@ -175,6 +175,25 @@ def get_photos(db: Session = Depends(get_db)):
     if not admin_state["allow_photos"]:
         raise HTTPException(status_code=403, detail="Photos are not visible.")
     return crud.get_all_uploaded_photos(db)
+
+
+@app.delete("/upload_photo/{photo_id}")
+def delete_photo(photo_id: int, db: Session = Depends(get_db), admin: str = Depends(get_current_admin)):
+    """
+    Delete an uploaded photo by ID.
+    """
+    photo = crud.get_photo_by_id(db, photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found.")
+    
+    # Delete the photo file from the local storage
+    filepath = os.path.join(UPLOAD_DIR, photo.filename)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    
+    # Delete the photo record from the database
+    crud.delete_photo(db, photo_id)
+    return {"message": "Photo deleted successfully"}
 
 
 @app.post("/admin/quiz", response_model=schemas.Quiz)
@@ -222,3 +241,24 @@ def get_quiz_participants(
     Admin authorization required.
     """
     return crud.get_all_quiz_participants(db)
+
+@app.put("/participant/{participant_id}", response_model=schemas.Participant)
+def update_participant(participant_id: int, participant: schemas.ParticipantCreate, db: Session = Depends(get_db), admin: str = Depends(get_current_admin)):
+    """
+    Update participant details.
+    """
+    db_participant = crud.get_participant_by_id(db, participant_id)
+    if not db_participant:
+        raise HTTPException(status_code=404, detail="Participant not found.")
+    return crud.update_participant(db, db_participant, participant)
+
+
+@app.put("/admin/quiz/{quiz_id}", response_model=schemas.Quiz)
+def update_quiz(quiz_id: int, quiz: schemas.QuizCreate, db: Session = Depends(get_db), admin: str = Depends(get_current_admin)):
+    """
+    Update quiz details.
+    """
+    db_quiz = crud.get_quiz_by_id(db, quiz_id)
+    if not db_quiz:
+        raise HTTPException(status_code=404, detail="Quiz not found.")
+    return crud.update_quiz(db, db_quiz, quiz)
