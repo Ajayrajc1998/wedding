@@ -42,15 +42,15 @@ def delete_participant(db: Session, participant_id: int):
 
 
 # Photo CRUD
-def save_photo(db: Session, photo: schemas.UploadedPhotoCreate):
+def save_photo(db: Session, first_name: str, last_name: str, phone_number: str, filename: str):
     """
     Save uploaded photo details to the database.
     """
     db_photo = models.UploadedPhoto(
-        first_name=photo.first_name,
-        last_name=photo.last_name,
-        phone_number=photo.phone_number,
-        filename=photo.filename,
+        first_name=first_name,
+        last_name=last_name,
+        phone_number=phone_number,
+        filename=filename,
     )
     db.add(db_photo)
     db.commit()
