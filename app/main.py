@@ -186,6 +186,7 @@ def download_photo(photo_id: int, db: Session = Depends(get_db)):
     """
     photo = crud.get_photo_by_id(db, photo_id)
     if not photo:
+        logging.error(f"Photo with ID {photo_id} not found in the database.")
         raise HTTPException(status_code=404, detail="Photo not found.")
     
     filepath = os.path.join(UPLOAD_DIR, photo.filename)
@@ -209,7 +210,7 @@ def delete_photo(photo_id: int, db: Session = Depends(get_db), admin: str = Depe
     
     # Delete the photo file from the local storage
     filepath = os.path.join(UPLOAD_DIR, photo.filename)
-    if os.path.exists(filepath):
+    if (os.path.exists(filepath)):
         os.remove(filepath)
     
     # Delete the photo record from the database
