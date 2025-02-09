@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey,JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey,JSON,LargeBinary
 from database import Base
 from datetime import datetime
 
@@ -40,11 +40,11 @@ class Quiz(Base):
 class UploadedPhoto(Base):
     __tablename__ = "uploaded_photos"
 
-    id = Column(Integer, primary_key=True, index=True)  # Primary key
-    first_name = Column(String, nullable=False)  # First name of the uploader
-    last_name = Column(String, nullable=False)  # Last name of the uploader
-    phone_number = Column(String, nullable=False)  # Phone number of the uploader
-    filename = Column(String, unique=True, nullable=False)  # File name of the uploaded photo
-    uploaded_at = Column(DateTime, default=datetime.utcnow)  # Timestamp when the photo was uploaded
-
+    id = Column(Integer, primary_key=True, index=True)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    phone_number = Column(String, nullable=False)
+    filename = Column(String, unique=True, nullable=False)
+    file_data = Column(LargeBinary, nullable=True)  # New column to store binary image data
+    uploaded_at = Column(DateTime, default=datetime.utcnow)
 

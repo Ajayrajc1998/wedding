@@ -1,3 +1,4 @@
+import io
 from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +11,7 @@ from typing import List
 import os
 from fastapi.responses import FileResponse
 import logging
-
+from fastapi.responses import StreamingResponse
 from database import SessionLocal, engine
 import models, schemas, crud
 
@@ -153,18 +154,17 @@ def upload_photo(
             status_code=400, detail=f"Photo upload limit reached for {first_name} {last_name}."
         )
 
-    # Save the photo file locally
-    filepath = os.path.join(UPLOAD_DIR, file.filename)
-    with open(filepath, "wb") as f:
-        f.write(file.file.read())
+    # Read the file binary data from the uploaded file
+    file_data = file.file.read()
 
-    # Save photo record in the database
+    # Save photo record in the database, including the file data
     crud.save_photo(
         db,
         first_name=first_name,
         last_name=last_name,
         phone_number=phone_number,
         filename=file.filename,
+        file_data=file_data
     )
     return {
         "message": f"Photo uploaded successfully for {first_name} {last_name}.",
@@ -182,21 +182,21 @@ def get_photos(db: Session = Depends(get_db)):
 @app.get("/photos/{photo_id}")
 def download_photo(photo_id: int, db: Session = Depends(get_db)):
     """
-    Download a specific photo by photo ID.
+    Download a specific photo by photo ID by streaming the binary data stored in the database.
     """
     photo = crud.get_photo_by_id(db, photo_id)
     if not photo:
         logging.error(f"Photo with ID {photo_id} not found in the database.")
         raise HTTPException(status_code=404, detail="Photo not found.")
-    
-    filepath = os.path.join(UPLOAD_DIR, photo.filename)
-    logging.info(f"Attempting to download photo from path: {filepath}")
-    
-    if not os.path.exists(filepath):
-        logging.error(f"File not found at path: {filepath}")
+
+    # Check if binary data exists
+    image_data = photo.file_data
+    if not image_data:
+        logging.error(f"Image data for photo ID {photo_id} is missing.")
         raise HTTPException(status_code=404, detail="File not found.")
-    
-    return FileResponse(filepath)
+
+    logging.info(f"Streaming image data for photo ID {photo_id}.")
+    return StreamingResponse(io.BytesIO(image_data), media_type="image/png")
 
 
 @app.delete("/upload_photo/{photo_id}")
