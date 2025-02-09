@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from passlib.context import CryptContext
 from typing import List
 import os
+from fastapi.responses import FileResponse
 
 from database import SessionLocal, engine
 import models, schemas, crud
@@ -175,6 +176,22 @@ def get_photos(db: Session = Depends(get_db)):
     if not admin_state["allow_photos"]:
         raise HTTPException(status_code=403, detail="Photos are not visible.")
     return crud.get_all_uploaded_photos(db)
+
+
+@app.get("/photos/{photo_id}")
+def download_photo(photo_id: int, db: Session = Depends(get_db)):
+    """
+    Download a specific photo by photo ID.
+    """
+    photo = crud.get_photo_by_id(db, photo_id)
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found.")
+    
+    filepath = os.path.join(UPLOAD_DIR, photo.filename)
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="File not found.")
+    
+    return FileResponse(filepath)
 
 
 @app.delete("/upload_photo/{photo_id}")
