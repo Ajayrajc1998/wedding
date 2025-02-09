@@ -9,6 +9,7 @@ from passlib.context import CryptContext
 from typing import List
 import os
 from fastapi.responses import FileResponse
+import logging
 
 from database import SessionLocal, engine
 import models, schemas, crud
@@ -188,7 +189,10 @@ def download_photo(photo_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Photo not found.")
     
     filepath = os.path.join(UPLOAD_DIR, photo.filename)
+    logging.info(f"Attempting to download photo from path: {filepath}")
+    
     if not os.path.exists(filepath):
+        logging.error(f"File not found at path: {filepath}")
         raise HTTPException(status_code=404, detail="File not found.")
     
     return FileResponse(filepath)
