@@ -174,8 +174,8 @@ def upload_photo(
 
 @app.get("/photos", response_model=List[schemas.UploadedPhoto])
 def get_photos(db: Session = Depends(get_db)):
-    if not admin_state["allow_photos"]:
-        raise HTTPException(status_code=403, detail="Photos are not visible.")
+    # if not admin_state["allow_photos"]:
+    #     raise HTTPException(status_code=403, detail="Photos are not visible.")
     return crud.get_all_uploaded_photos(db)
 
 
@@ -231,8 +231,8 @@ def get_quiz(db: Session = Depends(get_db)):
     """
     Fetch all quiz questions (only if the admin has enabled the quiz).
     """
-    if not admin_state["allow_quiz"]:
-        raise HTTPException(status_code=403, detail="Quiz is not available.")
+    # if not admin_state["allow_quiz"]:
+    #     raise HTTPException(status_code=403, detail="Quiz is not available.")
     return crud.get_all_quizzes(db)
 
 @app.post("/quiz/submit", response_model=schemas.QuizParticipant)
